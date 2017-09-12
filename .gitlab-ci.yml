@@ -1,4 +1,105 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
 stages:
   - build
   - test
   - deploy
+
+cache:
+  untracked: true
+
+variables:
+  CONTAINER_RELEASE_IMAGE: registry.dev.sendit.asia/sendit/2stage-api
+  DOCKER_DRIVER: overlay
+
+before_script:
+  - export DOCKER_API_VERSION=1.23 && docker login -u $DOCKER_USER -p $DOCKER_PASSWORD registry.dev.sendit.asia
+  - apk update && apk add ca-certificates wget && update-ca-certificates
+  - wget -P /var/tmp https://github.com/rancher/rancher-compose/releases/download/v0.12.3/rancher-compose-linux-amd64-v0.12.3.tar.gz
+  - tar xvzf /var/tmp/rancher-compose-linux-amd64-v0.12.3.tar.gz && mv rancher-compose-v0.12.3/rancher-compose /usr/bin/rancher-compose && chmod +x /usr/bin/rancher-compose
+
+development-push:
+  stage: deploy
+  environment: development
+  script:
+    - docker pull $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} || true
+    - docker build --cache-from $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} -t $CONTAINER_RELEASE_IMAGE:build-${CI_BUILD_ID} -f deployment/Dockerfile .
+    - docker tag $CONTAINER_RELEASE_IMAGE:build-${CI_BUILD_ID} $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME}
+    - docker push $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME}
+    - docker push $CONTAINER_RELEASE_IMAGE:build-${CI_BUILD_ID}
+    - COUNTRY=th TRACKING_HOST=$DEVELOPMENT_TRACKING_HOST PUSHER_APPID=$DEVELOPMENT_PUSHER_APPID PUSHER_CLUSTER=$DEVELOPMENT_PUSHER_CLUSTER PUSHER_KEY=$DEVELOPMENT_PUSHER_KEY PUSHER_SECRET=$DEVELOPMENT_PUSHER_SECRET DEVELOPMENT_DB_NAME=$DEVELOPMENT_TH_DB_NAME DEVELOPMENT_DYNAMIC_COURIER_STATUS_HOST=$STAGING_DYNAMIC_COURIER_STATUS_HOST DEVELOPMENT_DYNAMIC_LOADINGDOC_HOST=$STAGING_DYNAMIC_LOADINGDOC_HOST rancher-compose --url $DEVELOPMENT_RANCHER_URL --access-key $DEVELOPMENT_RANCHER_ACCESS_KEY --secret-key $DEVELOPMENT_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.development.yml -r deployment/rancher-compose.development.yml -p branch-th up 2stage-api --force-upgrade -c -d -p
+    # - COUNTRY=ph PUSHER_APPID=$DEVELOPMENT_PUSHER_APPID PUSHER_CLUSTER=$DEVELOPMENT_PUSHER_CLUSTER PUSHER_KEY=$DEVELOPMENT_PUSHER_KEY PUSHER_SECRET=$DEVELOPMENT_PUSHER_SECRET DEVELOPMENT_DB_NAME=$DEVELOPMENT_PH_DB_NAME rancher-compose --url $DEVELOPMENT_RANCHER_URL --access-key $DEVELOPMENT_RANCHER_ACCESS_KEY --secret-key $DEVELOPMENT_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.development.yml -r deployment/rancher-compose.development.yml -p branch-ph up 2stage-api --force-upgrade -c -d -p
+    # - COUNTRY=vn PUSHER_APPID=$DEVELOPMENT_PUSHER_APPID PUSHER_CLUSTER=$DEVELOPMENT_PUSHER_CLUSTER PUSHER_KEY=$DEVELOPMENT_PUSHER_KEY PUSHER_SECRET=$DEVELOPMENT_PUSHER_SECRET DEVELOPMENT_DB_NAME=$DEVELOPMENT_VN_DB_NAME rancher-compose --url $DEVELOPMENT_RANCHER_URL --access-key $DEVELOPMENT_RANCHER_ACCESS_KEY --secret-key $DEVELOPMENT_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.development.yml -r deployment/rancher-compose.development.yml -p branch-vn up 2stage-api --force-upgrade -c -d -p
+  tags:
+    - docker
+  only:
+    - development@sendit-th/sendit-2stage-api
+
+staging-push:
+  stage: deploy
+  environment: staging
+  script:
+    - docker pull $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} || true
+    - docker build --cache-from $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} -t $CONTAINER_RELEASE_IMAGE:build-${CI_BUILD_ID} -f deployment/Dockerfile .
+    - docker tag $CONTAINER_RELEASE_IMAGE:build-${CI_BUILD_ID} $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME}
+    - docker push $CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME}
+    - docker push $CONTAINER_RELEASE_IMAGE:build-${CI_BUILD_ID}
+    - COUNTRY=th TRACKING_HOST=$STAGING_TRACKING_HOST PUSHER_APPID=$STAGING_PUSHER_APPID PUSHER_CLUSTER=$STAGING_PUSHER_CLUSTER PUSHER_KEY=$STAGING_PUSHER_KEY PUSHER_SECRET=$STAGING_PUSHER_SECRET STAGING_DB_NAME=$STAGING_TH_DB_NAME STAGING_DYNAMIC_COURIER_STATUS_HOST=$STAGING_DYNAMIC_COURIER_STATUS_HOST STAGING_DYNAMIC_LOADINGDOC_HOST=$STAGING_DYNAMIC_LOADINGDOC_HOST rancher-compose --url $STAGING_RANCHER_URL --access-key $STAGING_RANCHER_ACCESS_KEY --secret-key $STAGING_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.staging.yml -r deployment/rancher-compose.staging.yml -p branch-th up 2stage-api --force-upgrade -c -d -p
+    # - COUNTRY=ph PUSHER_APPID=$STAGING_PUSHER_APPID PUSHER_CLUSTER=$STAGING_PUSHER_CLUSTER PUSHER_KEY=$STAGING_PUSHER_KEY PUSHER_SECRET=$STAGING_PUSHER_SECRET STAGING_DB_NAME=$STAGING_PH_DB_NAME rancher-compose --url $STAGING_RANCHER_URL --access-key $STAGING_RANCHER_ACCESS_KEY --secret-key $STAGING_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.staging.yml -r deployment/rancher-compose.staging.yml -p branch-ph up 2stage-api --force-upgrade -c -d -p
+    # - COUNTRY=vn PUSHER_APPID=$STAGING_PUSHER_APPID PUSHER_CLUSTER=$STAGING_PUSHER_CLUSTER PUSHER_KEY=$STAGING_PUSHER_KEY PUSHER_SECRET=$STAGING_PUSHER_SECRET STAGING_DB_NAME=$STAGING_VN_DB_NAME rancher-compose --url $STAGING_RANCHER_URL --access-key $STAGING_RANCHER_ACCESS_KEY --secret-key $STAGING_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.staging.yml -r deployment/rancher-compose.staging.yml -p branch-vn up 2stage-api --force-upgrade -c -d -p
+  tags:
+    - docker
+  only:
+    - master@sendit-th/sendit-2stage-api
+
+production-old-push:
+  image: cyppan/eb
+  environment: production
+  before_script:
+    - apt-get update
+    - apt-get install -y git
+  stage: deploy
+  script:
+    - ./prepare.sh $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $EB_APP_NAME $EB_APP_ENV_NAME $EC2_KEYNAME
+    - echo "1" | eb init $EB_APP_NAME
+    - eb use $EB_APP_PRODUCTION_ENV_NAME
+    - eb deploy
+  tags:
+    - docker
+  only:
+    - tags@sendit-th/sendit-2stage-api
+
+production-new-push:
+  stage: deploy
+  environment: production
+  script:
+    - docker pull $CONTAINER_RELEASE_IMAGE:stable || true
+    - docker build --cache-from $CONTAINER_RELEASE_IMAGE:stable -t $CONTAINER_RELEASE_IMAGE:${CI_BUILD_TAG} -f deployment/Dockerfile .
+    - docker tag $CONTAINER_RELEASE_IMAGE:${CI_BUILD_TAG} $CONTAINER_RELEASE_IMAGE:stable
+    - docker push $CONTAINER_RELEASE_IMAGE:stable
+    - docker push $CONTAINER_RELEASE_IMAGE:${CI_BUILD_TAG}
+    - COUNTRY=th TRACKING_HOST=$PRODUCTION_TH_TRACKING_HOST PUSHER_APPID=$PRODUCTION_TH_PUSHER_APPID PUSHER_CLUSTER=$PRODUCTION_TH_PUSHER_CLUSTER PUSHER_KEY=$PRODUCTION_TH_PUSHER_KEY PUSHER_SECRET=$PRODUCTION_TH_PUSHER_SECRET PRODUCTION_DB_NAME=$PRODUCTION_TH_DB_NAME PRODUCTION_DYNAMIC_COURIER_STATUS_HOST=$PRODUCTION_DYNAMIC_COURIER_STATUS_HOST PRODUCTION_DYNAMIC_LOADINGDOC_HOST=$PRODUCTION_DYNAMIC_LOADINGDOC_HOST rancher-compose --url $PRODUCTION_RANCHER_URL --access-key $PRODUCTION_RANCHER_ACCESS_KEY --secret-key $PRODUCTION_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.production.yml -r deployment/rancher-compose.production.yml -p branch-th up 2stage-driver-api 2stage-cs-api --force-upgrade -c -d -p
+    # - COUNTRY=ph PUSHER_APPID=$PRODUCTION_PH_PUSHER_APPID PUSHER_CLUSTER=$PRODUCTION_PH_PUSHER_CLUSTER PUSHER_KEY=$PRODUCTION_PH_PUSHER_KEY PUSHER_SECRET=$PRODUCTION_PH_PUSHER_SECRET PRODUCTION_DB_NAME=$PRODUCTION_PH_DB_NAME rancher-compose --url $PRODUCTION_RANCHER_URL --access-key $PRODUCTION_RANCHER_ACCESS_KEY --secret-key $PRODUCTION_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.production.yml -r deployment/rancher-compose.production.yml -p branch-ph up 2stage-api --force-upgrade -c -d -p
+    # - COUNTRY=vn PUSHER_APPID=$PRODUCTION_VN_PUSHER_APPID PUSHER_CLUSTER=$PRODUCTION_VN_PUSHER_CLUSTER PUSHER_KEY=$PRODUCTION_VN_PUSHER_KEY PUSHER_SECRET=$PRODUCTION_VN_PUSHER_SECRET PRODUCTION_DB_NAME=$PRODUCTION_VN_DB_NAME rancher-compose --url $PRODUCTION_RANCHER_URL --access-key $PRODUCTION_RANCHER_ACCESS_KEY --secret-key $PRODUCTION_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.production.yml -r deployment/rancher-compose.production.yml -p branch-vn up 2stage-api --force-upgrade -c -d -p
+  tags:
+    - docker
+  only:
+    - tags@sendit-th/sendit-2stage-api
+
+production-cron-push:
+  stage: deploy
+  environment: production
+  script:
+    - docker pull $CONTAINER_RELEASE_IMAGE:cron || true
+    - docker build --cache-from $CONTAINER_RELEASE_IMAGE:cron -t $CONTAINER_RELEASE_IMAGE:cron-${CI_BUILD_TAG} -f deployment/Dockerfile.cron .
+    - docker tag $CONTAINER_RELEASE_IMAGE:cron-${CI_BUILD_TAG} $CONTAINER_RELEASE_IMAGE:cron
+    - docker push $CONTAINER_RELEASE_IMAGE:cron
+    - docker push $CONTAINER_RELEASE_IMAGE:cron-${CI_BUILD_TAG}
+    - COUNTRY=th TRACKING_HOST=$PRODUCTION_TH_TRACKING_HOST PUSHER_APPID=$PRODUCTION_TH_PUSHER_APPID PUSHER_CLUSTER=$PRODUCTION_TH_PUSHER_CLUSTER PUSHER_KEY=$PRODUCTION_TH_PUSHER_KEY PUSHER_SECRET=$PRODUCTION_TH_PUSHER_SECRET PRODUCTION_DB_NAME=$PRODUCTION_TH_DB_NAME rancher-compose --url $PRODUCTION_RANCHER_URL --access-key $PRODUCTION_RANCHER_ACCESS_KEY --secret-key $PRODUCTION_RANCHER_SECRET_KEY -f deployment/docker-compose.yml -f deployment/docker-compose.production.yml -r deployment/rancher-compose.production.yml -p branch-th up 2stage-cron --force-upgrade -c -d -p
+  tags:
+    - docker
+  only:
+    - tags@sendit-th/sendit-2stage-api
