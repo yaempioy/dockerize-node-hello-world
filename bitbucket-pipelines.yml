@@ -18,6 +18,10 @@ pipelines:
     master:
       - step:
          script:
+          - wget -P /var/tmp https://github.com/rancher/rancher-compose/releases/download/v0.12.3/rancher-compose-linux-amd64-v0.12.3.tar.gz
+          - tar xvzf /var/tmp/rancher-compose-linux-amd64-v0.12.3.tar.gz && mv rancher-compose-v0.12.3/rancher-compose /usr/bin/rancher-compose && chmod +x /usr/bin/rancher-compose
+          - npm install
+          - npm test
           - docker pull $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} || true
           - docker build --cache-from $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} -t $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:commit-${BITBUCKET_COMMIT} .
           - docker tag $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:commit-${BITBUCKET_COMMIT} $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME}
