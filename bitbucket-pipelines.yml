@@ -14,7 +14,9 @@ pipelines:
           - npm install
           - npm test
           - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          - docker build -t $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:$BITBUCKET_COMMIT .
-          - docker push $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:$BITBUCKET_COMMIT
+          - docker build --cache-from $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} -t $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:commit-${CI_BUILD_ID} .
+          - docker tag $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:commit-${BITBUCKET_COMMIT} $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME}
+          - docker push $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME}
+          - docker push $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:commit-${BITBUCKET_COMMIT}
 options:  
   docker: true
