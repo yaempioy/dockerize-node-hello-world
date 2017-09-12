@@ -14,7 +14,7 @@ pipelines:
           - npm install
           - npm test
           - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          - docker build -t $DOCKER_USER/hello-world .
-          - docker push $DOCKER_USER/hello-world
-options:
+          - docker build -t $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:$BITBUCKET_COMMIT .
+          - docker push $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:$BITBUCKET_COMMIT
+options:  
   docker: true
