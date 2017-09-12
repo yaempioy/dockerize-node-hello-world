@@ -13,3 +13,8 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - npm install
           - npm test
+          - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          - docker build -t $DOCKER_USER/hello-world .
+          - docker push $DOCKER_USER/hello-world
+  options:
+    docker: true
