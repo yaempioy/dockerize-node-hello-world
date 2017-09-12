@@ -17,8 +17,6 @@ pipelines:
   branches:
     master:
       - step:
-        cashes:
-          - node
         script: # Modify the commands below to build your repository.          
           - docker pull $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} || true
           - docker build --cache-from $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:${CI_BUILD_REF_NAME} -t $DOCKER_USER/$CONTAINER_RELEASE_IMAGE:commit-${CI_BUILD_ID} .
