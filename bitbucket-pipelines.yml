@@ -16,5 +16,5 @@ pipelines:
           - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           - docker build -t $DOCKER_USER/hello-world .
           - docker push $DOCKER_USER/hello-world
-  options:
-    docker: true
+options:
+  docker: true
