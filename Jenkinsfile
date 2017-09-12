@@ -1,21 +1,19 @@
-pipeline {
-    agent any
+node('node') {
+    try {
+       stage('Test'){
 
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Building..'
-            }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing..'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying....'
-            }
-        }
+         env.NODE_ENV = "test"
+
+         print "Environment will be : ${env.NODE_ENV}"
+
+         sh 'node -v'
+         sh 'npm install'
+         sh 'npm test'
+
+       }
     }
+    catch (err) {
+        throw err
+    }
+
 }
