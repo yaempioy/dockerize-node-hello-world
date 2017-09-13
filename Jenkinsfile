@@ -1,4 +1,6 @@
 node {
     checkout scm 
-    /* .. snip .. */
+    stage('Test'){
+        sh 'node -v'
+    }
 }
