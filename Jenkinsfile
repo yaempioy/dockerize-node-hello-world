@@ -10,7 +10,7 @@ node {
         checkout scm
     }
 
-    stage('Build') {
+    stage('Build Docker Image') {
         echo 'Building dependencies...'
         sh 'npm i'
     }
@@ -18,6 +18,11 @@ node {
     stage('Test') {
         echo 'Testing...'
         sh 'npm test'
+    }
+
+    stage('Build Image') {
+        echo 'Build Docker Image...'
+        app = docker.build('vedadev/hello-world')
     }
 }
 
