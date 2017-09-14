@@ -49,9 +49,7 @@ node {
 
     stage('Rancher Compose') {
         sh 'rancher-compose'
-        sh 'echo "${RANCHER_URL}"'
-        sh 'echo "${RANCHER_ACCESS_KEY}"'
-        sh 'echo "${RANCHER_SECRET_KEY}"'
+        sh 'rancher-compose --url ${RANCHER_UR}L --access-key ${RANCHER_ACCESS_KEY} --secret-key ${RANCHER_SECRET_KEY} -f docker-compose.yml -r rancher-compose.development.yml -p vedanetwork up Jenkins-Hello --force-upgrade -c -d -p'        
     }
 }
 
