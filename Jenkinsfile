@@ -49,7 +49,7 @@ node {
 
     stage('Rancher Compose') {
         sh 'rancher-compose'        
-        sh 'rancher-compose --url ${RANCHER_UR}L --access-key ${RANCHER_ACCESS_KEY} --secret-key ${RANCHER_SECRET_KEY} up '        
+        sh 'rancher-compose --url ${RANCHER_UR} --access-key ${RANCHER_ACCESS_KEY} --secret-key ${RANCHER_SECRET_KEY} up '        
     }
 }
 
