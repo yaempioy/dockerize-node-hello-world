@@ -49,7 +49,7 @@ node {
 
     stage('Rancher Compose') {
         sh 'rancher-compose'        
-        sh 'rancher-compose --url ${RANCHER_URL} --access-key ${RANCHER_ACCESS_KEY} --secret-key ${RANCHER_SECRET_KEY} up '        
+        sh 'rancher-compose --url ${RANCHER_URL} --access-key ${RANCHER_ACCESS_KEY} --secret-key ${RANCHER_SECRET_KEY} -f docker-compose.yml -r rancher-compose.development.yml -p veda-network up hello-world --force-upgrade -c -d -p'                    
     }
 }
 
