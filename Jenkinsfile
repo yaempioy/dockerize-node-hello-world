@@ -49,9 +49,9 @@ node {
 
     stage('Rancher Compose') {
         sh 'rancher-compose'
-        sh 'echo ${env.VARIABLE_NAME.RANCHER_URL}'
-        sh 'echo ${env.VARIABLE_NAME.RANCHER_ACCESS_KEY}'
-        sh 'echo ${env.VARIABLE_NAME.RANCHER_SECRET_KEY}'
+        sh 'echo "${RANCHER_URL}"'
+        sh 'echo "${RANCHER_ACCESS_KEY}"'
+        sh 'echo "${RANCHER_SECRET_KEY}"'
     }
 }
 
