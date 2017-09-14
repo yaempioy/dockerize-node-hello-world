@@ -36,7 +36,6 @@ node {
         }
     }
     
-
     stage('Push image') {
         /* Finally, we'll push the image with two tags:
          * First, the incremental build number from Jenkins
@@ -46,6 +45,10 @@ node {
             app.push("build-${env.BUILD_ID}")
             app.push("latest")
         }
+    }
+
+    stage('Rancher Compose') {
+        sh 'rancher-compose'
     }
 }
 
