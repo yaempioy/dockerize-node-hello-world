@@ -64,10 +64,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
   def colorName = 'RED'
   def colorCode = '#FF0000'
   def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
-  def summary = "${subject} (${env.BUILD_URL})"
-  // Office lights ;)
-  def buildSuccessLights = https://maker.ifttt.com/trigger/build_success/with/key/cOFUyFk0DQJlvlSAPhgZpN
-  def buildFailLights = https://maker.ifttt.com/trigger/build_fail/with/key/cOFUyFk0DQJlvlSAPhgZpN
+  def summary = "${subject} (${env.BUILD_URL})"  
 
   // Override default values based on build status
   if (buildStatus == 'STARTED') {
@@ -76,11 +73,11 @@ def notifyBuild(String buildStatus = 'STARTED') {
   } else if (buildStatus == 'SUCCESSFUL') {
     color = 'GREEN'
     colorCode = '#00FF00'
-    summary = "${summary} <Office's lights step: ${buildSuccessLights}>"
+    summary = "${summary} '<${BUILD_SUCCESS_LIGHT}>'"
   } else {
     color = 'RED'
     colorCode = '#FF0000'
-    summary = "${summary} <Office's lights step: ${buildFailLights}>"
+    summary = "${summary} '<${BUILD_FAIL_LIGHT}>'"
   }
 
   // Send notifications
