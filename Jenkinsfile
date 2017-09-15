@@ -66,8 +66,8 @@ def notifyBuild(String buildStatus = 'STARTED') {
   def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
   def summary = "${subject} (${env.BUILD_URL})"
   // Office lights ;)
-  def buildSuccessLights = "https://maker.ifttt.com/trigger/build_success/with/key/cOFUyFk0DQJlvlSAPhgZpN"
-  def buildFailLights = "https://maker.ifttt.com/trigger/build_fail/with/key/cOFUyFk0DQJlvlSAPhgZpN"
+  def buildSuccessLights = https://maker.ifttt.com/trigger/build_success/with/key/cOFUyFk0DQJlvlSAPhgZpN
+  def buildFailLights = https://maker.ifttt.com/trigger/build_fail/with/key/cOFUyFk0DQJlvlSAPhgZpN
 
   // Override default values based on build status
   if (buildStatus == 'STARTED') {
